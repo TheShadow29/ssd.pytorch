@@ -446,9 +446,12 @@ if __name__ == '__main__':
     net = build_ssd('test', 300, num_classes)            # initialize SSD
     net.cuda()
     net.eval()
+    torch.cuda.synchronize()
     st_time = time.time()
-    o = net(torch.rand(1, 3, 300, 300))
-    print(time.time() - st_time)
+    o = net(torch.rand(1, 3, 300, 300).cuda())
+    torch.cuda.synchronize()
+    end_time = time.time()
+    print(end_time - st_time)
 
     if args.trained_model:
         print('Loading Existing Model', args.trained_model)
@@ -456,9 +459,12 @@ if __name__ == '__main__':
 
     net.cuda()
     net.eval()
+    torch.cuda.synchronize()
     st_time = time.time()
-    o = net(torch.rand(1, 3, 300, 300))
-    print(time.time() - st_time)
+    o = net(torch.rand(1, 3, 300, 300).cuda())
+    torch.cuda.synchronize()
+    end_time = time.time()
+    print(end_time - st_time)
 
     # import pdb
     # pdb.set_trace()
