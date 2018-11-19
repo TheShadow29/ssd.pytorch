@@ -78,6 +78,7 @@ set_type = 'test'
 
 class Timer(object):
     """A simple timer."""
+
     def __init__(self):
         self.total_time = 0.
         self.calls = 0
@@ -171,8 +172,8 @@ def do_python_eval(output_dir='output', use_07=True):
     for i, cls in enumerate(labelmap):
         filename = get_voc_results_file_template(set_type, cls)
         rec, prec, ap = voc_eval(
-           filename, annopath, imgsetpath.format(set_type), cls, cachedir,
-           ovthresh=0.5, use_07_metric=use_07_metric)
+            filename, annopath, imgsetpath.format(set_type), cls, cachedir,
+            ovthresh=0.5, use_07_metric=use_07_metric)
         aps += [ap]
         print('AP for {} = {:.4f}'.format(cls, ap))
         with open(os.path.join(output_dir, cls + '_pr.pkl'), 'wb') as f:
@@ -269,7 +270,7 @@ cachedir: Directory for caching the annotations
             recs[imagename] = parse_rec(annopath % (imagename))
             if i % 100 == 0:
                 print('Reading annotation for {:d}/{:d}'.format(
-                   i + 1, len(imagenames)))
+                    i + 1, len(imagenames)))
         # save
         print('Saving cached annotations to {:s}'.format(cachefile))
         with open(cachefile, 'wb') as f:
@@ -416,6 +417,25 @@ def test_net(save_folder, net, cuda, dataset, transform, top_k,
 def evaluate_detections(box_list, output_dir, dataset):
     write_voc_results_file(box_list, dataset)
     do_python_eval(output_dir)
+
+
+def tester():
+    num_classes = len(labelmap) + 1                      # +1 for background
+    net = build_ssd('test', 300, num_classes)            # initialize SSD
+    net.load_state_dict(torch.load('./current_model.pth'))
+    net.eval()
+    print('Finished loading model!')
+    # load data
+    dataset = VOCDetection(args.voc_root, [('2007', set_type)],
+                           BaseTransform(300, dataset_mean),
+                           VOCAnnotationTransform())
+    if args.cuda:
+        net = net.cuda()
+        cudnn.benchmark = True
+    # evaluation
+    test_net(args.save_folder, net, args.cuda, dataset,
+             BaseTransform(net.size, dataset_mean), args.top_k, 300,
+             thresh=args.confidence_threshold)
 
 
 if __name__ == '__main__':
